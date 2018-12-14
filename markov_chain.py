@@ -2,23 +2,43 @@ import math
 import numpy as np
 import scipy as spy
 
+# helper function that adds two matrices
+def matrix_add(A, B):
+    if (not isinstance(A, list) or not isinstance(B, list)):
+        raise Exception("Error: cannot add matrices A and B because they have different dimensions")
+    for i in range(len(A)):
+        if (not isinstance(A[i], list) or not isinstance(B[i], list)):
+            raise Exception("Error: cannot add matrices A and B because they have different dimensions")
+    
+    result = A.copy()
+
+    for i in range(len(result)):
+        for j in range(len(result[0])):
+            result[i][j] + B[i][j]
+    
+    return result
+
 # helper function that computes the result of multiplying a 
 # scalar x with a matrix A
-def scalarMult(A, x):
+def scalar_mult(A, x):
     if (not isinstance(A, list) or not(isinstance(x, int) or isinstance(x, float))):
         raise Exception("Error: invalid input for scalar mult")
     for i in range(len(A)):
         if (not isinstance(A[i], list)):
             raise Exception("Error: invalid input for scalar mult")
 
-    Ax = []
+    Ax = A.copy()
     for i in range(len(A)):
-        Ax.append(x*A[i])
+        for j in range(len(A)):
+            Ax[i][j] = x * Ax[i][j]
+
+    if (len(Ax) != len(Ax[0])):
+        raise Exception("Error: scalar mult resulted in wrong dimensions")
 
     return Ax
 
 # helper function that computes the dot product of two vectors
-def dotProduct(a, b):
+def dot_product(a, b):
     if (not isinstance(a, list) or not isinstance(b, list)):
         raise Exception("Error: invalid input for dot product")
     if (len(a) != len(b)):
@@ -31,7 +51,7 @@ def dotProduct(a, b):
     return sum
         
 # helper function that computes the result of matrix multiplying A and v
-def matrixMultiply(A, v):
+def matrix_multiply(A, v):
     if not isinstance(A, list) or not isinstance(v, list):
         raise Exception("Error: invalid input for matrix multiply")
     if (len(A[0]) != len(v)):
@@ -39,7 +59,7 @@ def matrixMultiply(A, v):
 
     Av = []
     for i in range(len(A)):
-        Av.append(dotProduct(A[i], v))
+        Av.append(dot_product(A[i], v))
         
     return Av
 
@@ -57,7 +77,7 @@ def is_markov_transition_matrix(P):
 
     # if an element of P is not a list, raise Exception
     for i in range(len(P)):
-        if not isinstance(P[i]):
+        if not isinstance(P[i], list):
             raise Exception("Error: P is not a matrix")
 
     dim = len(P) # dimension of P
@@ -87,8 +107,15 @@ def is_markov_transition_matrix(P):
 
     # if 1 is not an eigenvalue of P, raise Exception
     eig = np.linalg.eig(np.array(P))[0]
-    if (1 in eig) == False:
+    tolerance = 0.1
+    eig1_found = False
+    for i in range(len(eig)):
+        if (abs(eig[i] - 1) < tolerance):
+            eig1_found = True
+    if (eig1_found == False):
         raise Exception("Error: 1 is not an eigenvalue of P")
+
+    return True
 
 # takes in a pagerank vector x that has been multiplied by A many times
 # outputs the ranks of the elements of the original list
@@ -96,6 +123,7 @@ def is_markov_transition_matrix(P):
 # important node is 2, and the least important is 0
 def calculate_rank(x):
     rank = []
+    # print(x)
     for i in range(len(x)):
         max_index = 0
         max = x[max_index]
@@ -103,11 +131,12 @@ def calculate_rank(x):
             if x[j] > max:
                 max_index = j
                 max = x[j]
-    rank.append(max_index)
-    x[max_index] = 0
+        rank.append(max_index)
+        x[max_index] = 0
 
     return rank
 
+# main function
 # takes in a markov chain, "links", and d a damping factor between 0 and 1
 # outputs a set of rankings
 def rank(links, d=.85):
@@ -134,21 +163,23 @@ def rank(links, d=.85):
     print("Creating pagerank vector...")
     x = [1 for i in range(num_nodes)]
 
+    # WORKS UP TO THIS POINT
+    # POSSIBLE ERRORS WITH CUSTOM MATRIX MATH FUNCTIONS AHEAD
+
     # create a modified matrix to account for reducible web graphs
     # (reducible web graphs do not have bidirectional paths from each node t0
     # each other node)
-    # 1. make an all 1s square matrix, all_ones, of size dim
+    # 1. make an all 1s square matrix, all_ones, of size num_nodes
     # 2. then perform M = dA + (1-d)/dim(all_ones)
     print("Creating modified matrix M...")
-    all_ones = [[1 for i in range(num_nodes)] for i in range(num_nodes)]
-    M = d*A + ((1-d)/num_nodes)*all_ones
-        
+    all_ones = [[1 for i in range(num_nodes)] for j in range(num_nodes)]
+    M = matrix_add(scalar_mult(A, d), scalar_mult(all_ones, (1-d)/num_nodes))         # SOMETHING COULD BE WRONG HERE
     # perform x = Mx for an arbitrarily large number of times
     # until M converges
     print("Repeatedly muliplying M and x...")
-    k = 10
+    k = 20
     for i in range(k):
-        x = matrixMultiply(M, x)
+        x = matrix_multiply(M, x)                                                     # SOMETHING COULD BE WRONG HERE
 
     # the resulting x after k iterations gives the rank of each of the original elements
     print("Analyzing rank...")
