@@ -19,7 +19,7 @@ print([5, 2, 1, 6, 3, 4, 0])
 print("Actual output")
 print(output)
 
-
+  
 #INPUT:
 print("***Begin test 2***\n")
 
