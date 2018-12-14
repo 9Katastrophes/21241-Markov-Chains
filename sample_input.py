@@ -38,4 +38,16 @@ print([2,6,8,0,4,3,9,5,7,1])
 print("Actual output")
 print(output)
 
-#(or, with a slightly different strategy, perhaps [2,6,8,0,4,3,9,5,7,1]
+#INPUT:
+print("***Begin test 3***\n")
+
+input = [[1,2,3],[3,4],[0,3],[1,6],[6],[4,7],[5],[5,6]]
+
+
+#OUTPUT:
+output = markov_chain.rank(input)
+
+print("Expected output")
+print([])
+print("Actual output")
+print(output)

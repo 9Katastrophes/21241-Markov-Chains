@@ -93,7 +93,7 @@ def calculate_rank(A):
 # main function
 # takes in a markov chain, "links", and d a damping factor between 0 and 1
 # outputs a set of rankings
-def rank(links):
+def rank(links, d=.85):
     # count number of nodes
     num_nodes = len(links)
 
@@ -115,8 +115,15 @@ def rank(links):
     if (not is_markov_transition_matrix(A)):
         raise Exception("Error: rank verification failed")
 
+    # create modified matrix M like so:
+    # M = dA + (1-d)/num_nodes * all_ones
+    all_ones = [[0 for i in range(num_nodes)] for j in range(num_nodes)]
+    all_ones = np.array(all_ones)
+
+    M = np.add(np.multiply(d,A), np.multiply((1-d)/num_nodes, all_ones))
+
     # analyzing rank using eigenvectors of A
     print("Analyzing rank...")
-    result = calculate_rank(A)
+    result = calculate_rank(M)
 
     return result
